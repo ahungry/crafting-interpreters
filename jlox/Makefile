@@ -1,2 +1,2 @@
 main:
-	java src/com/craftinginterpreters/lox/Lox.java
+	javac src/com/craftinginterpreters/lox/Lox.java
