@@ -1,2 +1,2 @@
 jlox:
-	make -C jlox main
+	make -C jlox test
