@@ -106,6 +106,8 @@ class Scanner {
   }
 
   private void identifier() {
+    while (isAlphaNumeric(peek())) advance();
+
     // See if the identifier is a reserved word.
     String text = source.substring(start, current);
 
