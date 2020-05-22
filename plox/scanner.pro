@@ -4,6 +4,7 @@
 
 :- set_prolog_flag(double_quotes, chars).
 
+% 0 or more
 ws --> [W], { char_type(W, space) }, ws.
 ws --> [].
 
@@ -17,10 +18,12 @@ token(O) --> [I], { token(I, O) }.
 
 % https://www.metalevel.at/prolog/dcg
 % use listing(identifier). to see what the DCG is actually making...
-identifier([H|T]) --> [H], { code_type(H, alpha) ; H = '-' }, identifier(T).
-identifier([T]) --> [T].
+% 1 or more
+identifier([H|T]) --> [H], { code_type(H, alnum) ; H = '-' }, identifier(T).
+identifier([T]) --> [T], { code_type(T, alnum) ; T = '-' }.
 
-lexeme(Result) --> identifier(Result) ; token(Result).
+lexeme(Result) --> token(Result). % ; token(R1), Result = R1, write(R1).
+lexeme(Result) --> identifier(Result). % ; token(R1), Result = R1, write(R1).
 % phrase(lexeme(N), "{"). -> N = brace_left.
 
 lexemes([]) --> [].
