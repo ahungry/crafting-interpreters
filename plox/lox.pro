@@ -16,11 +16,16 @@ run_prompt() :-
   read_line_to_string(user_input, Line),
   Line \= end_of_file,
   string_chars(Line, Cs),
-  format("debug: ~w~n", [Cs]),
   run(Cs),
   run_prompt.
 
 run_prompt() :- format("bye~n").
+
+main() :-
+  current_prolog_flag(argv, Argv),
+  nth0(0, Argv, Argument0), % get first argument
+  scanner:scan_file(Argument0, Out),
+  format("~w~n", [Out]).
 
 main() :-
   format("Enter some input:"),

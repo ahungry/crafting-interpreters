@@ -1,5 +1,5 @@
 repl:
-	swipl -q -l lox.pro -t "main()"
+	./run.sh
 
 test:
 	./test.sh

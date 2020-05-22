@@ -2,6 +2,8 @@
             scan/2
           ]).
 
+:- use_module(library(pio)).
+
 :- set_prolog_flag(double_quotes, chars).
 
 ws --> [W], { char_type(W, white) }.
@@ -150,6 +152,9 @@ lexemes(Result, Result) --> [].
 
 scan(I, O) :-
   phrase(lexemes(O), I).
+
+scan_file(I, O) :-
+  phrase_from_file(lexemes(O), I).
 
 sample("hello world").
 
