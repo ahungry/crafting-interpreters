@@ -1,6 +1,6 @@
-%% :- module(scanner, [
-%%             scan/2
-%%           ]).
+:- module(scanner, [
+            scan/2
+          ]).
 
 :- set_prolog_flag(double_quotes, chars).
 

@@ -1,5 +1,7 @@
 % Ensure that .pro files will be loaded for prolog calls
 % http://www.swi-prolog.org/pldoc/man?predicate=prolog_file_type%2f2
+:- set_prolog_flag(double_quotes, chars).
+
 user:prolog_file_type(pro, prolog).
 
 % TODO Add scanner to create tokens
@@ -11,11 +13,11 @@ run(In) :-
   format("~w~n", [Out]).
 
 run_prompt() :-
-  read_line_to_codes(user_input, Cs),
-  Cs \= end_of_file,
-  atom_codes(A, Cs),
-  atomic_list_concat(L, ' ', A),
-  run(A),
+  read_line_to_string(user_input, Line),
+  Line \= end_of_file,
+  string_chars(Line, Cs),
+  format("debug: ~w~n", [Cs]),
+  run(Cs),
   run_prompt.
 
 run_prompt() :- format("bye~n").
