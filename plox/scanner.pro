@@ -4,16 +4,18 @@
 
 :- set_prolog_flag(double_quotes, chars).
 
-% 0 or more
-ws --> [W], { char_type(W, white) }, ws.
-ws --> [].
+ws --> [W], { char_type(W, white) }.
 
-nl --> [W], { char_type(W, newline) }, nl.
-nl --> [].
+nl(State, NewState) --> [W], {
+                          char_type(W, newline),
+                          get_dict(line, State, Line),
+                          Count is Line + 1,
+                          put_dict(line, State, Count, NewState)
+                        }.
 
-invisible --> ws.
-invisible --> nl.
-invisible --> [].
+invisible(State, NewState) --> nl(State, ImState1), invisible(ImState1, NewState).
+invisible(State, NewState) --> ws, invisible(State, NewState).
+invisible(State, State) --> [].
 
 keyword(O) --> "and"    , { O = and }.
 keyword(O) --> "class"  , { O = class }.
@@ -63,12 +65,12 @@ comment(O) --> "//", { O = comment }.
 any --> [W], { \+ char_type(W, newline) }, any.
 any --> [].
 
-comment_line(Result) --> comment(Result), any, nl.
+comment_line(State, NewState, Result) --> comment(Result), any, nl(State, NewState).
 
-lexeme(Result) --> comment_line(Result).
-lexeme(Result) --> token(Result).
-lexeme(Result) --> keyword(Result).
-lexeme(Result) -->
+lexeme(State, NewState, Result) --> comment_line(State, NewState, Result).
+lexeme(State, State, Result) --> token(Result).
+lexeme(State, State, Result) --> keyword(Result).
+lexeme(State, State, Result) -->
   \+ keyword(_),
   identifier(Letters),
   {
@@ -80,15 +82,15 @@ lexeme(Result) -->
 lexemes([]) --> [].
 lexemes(Result) --> lexemes(state{line: 1, acc: []}, Result).
 lexemes(State, Result) -->
-  invisible,
-  lexeme(R1),
+  invisible(State, NewState1),
+  lexeme(NewState1, NewState2, R1),
   {
-    get_dict(acc, State, Acc),
+    get_dict(acc, NewState2, Acc),
     append(Acc, [R1], R2),
-    put_dict(acc, State, R2, NewState)
+    put_dict(acc, NewState2, R2, NewState3)
   },
-  invisible,
-  lexemes(NewState, Result).
+  invisible(NewState3, NewState4),
+  lexemes(NewState4, Result).
 lexemes(Result, Result) --> [].
 
 scan(I, O) :-
