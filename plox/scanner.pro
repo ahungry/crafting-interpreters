@@ -5,8 +5,15 @@
 :- set_prolog_flag(double_quotes, chars).
 
 % 0 or more
-ws --> [W], { char_type(W, space) }, ws.
+ws --> [W], { char_type(W, white) }, ws.
 ws --> [].
+
+nl --> [W], { char_type(W, newline) }, nl.
+nl --> [].
+
+invisible --> ws.
+invisible --> nl.
+invisible --> [].
 
 keyword(O) --> "and"    , { O = and }.
 keyword(O) --> "class"  , { O = class }.
@@ -31,8 +38,16 @@ token('{', brace_left).
 token('}', brace_right).
 token('[', bracket_left).
 token(']', bracket_right).
+token('!', bang).
+token('=', equal).
+token('<', less).
+token('>', greater).
 % token(_, unknown).
 
+token(O) --> "!=", { O = bang_equal }.
+token(O) --> "==", { O = equal_equal }.
+token(O) --> ">=", { O = greater_equal }.
+token(O) --> "<=", { O = less_equal }.
 token(O) --> [I], { token(I, O) }.
 
 is_identifier(L) :- code_type(L, alnum) ; L = '-'.
@@ -43,6 +58,14 @@ is_identifier(L) :- code_type(L, alnum) ; L = '-'.
 identifier([H|T]) --> [H], { is_identifier(H) }, identifier(T).
 identifier([T]) --> [T], { is_identifier(T) }.
 
+comment(O) --> "//", { O = comment }.
+
+any --> [W], { \+ char_type(W, newline) }, any.
+any --> [].
+
+comment_line(Result) --> comment(Result), any, nl.
+
+lexeme(Result) --> comment_line(Result).
 lexeme(Result) --> token(Result).
 lexeme(Result) --> keyword(Result).
 lexeme(Result) -->
@@ -56,7 +79,8 @@ lexeme(Result) -->
 
 lexemes([]) --> [].
 lexemes(Result) --> lexemes([], Result).
-lexemes(Acc, Result) --> ws, lexeme(R1), { append(Acc, [R1], R2) }, ws, lexemes(R2, Result).
+lexemes(Acc, Result) -->
+  invisible, lexeme(R1), { append(Acc, [R1], R2) }, invisible, lexemes(R2, Result).
 lexemes(Result, Result) --> [].
 
 scan(I, O) :-
