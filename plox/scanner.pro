@@ -80,7 +80,7 @@ lexeme(State, State, Result) -->
 % phrase(lexeme(N), "{"). -> N = brace_left.
 
 lexemes([]) --> [].
-lexemes(Result) --> lexemes(state{line: 1, acc: []}, Result).
+lexemes(Result) --> lexemes(state{line: 1, acc: [], err: []}, Result).
 lexemes(State, Result) -->
   invisible(State, NewState1),
   lexeme(NewState1, NewState2, R1),
@@ -91,6 +91,21 @@ lexemes(State, Result) -->
   },
   invisible(NewState3, NewState4),
   lexemes(NewState4, Result).
+
+% Error branch
+lexemes(State, Result) -->
+  [Unknown],
+  invisible(State, NewState1),
+  {
+    get_dict(err, NewState1, Err),
+    get_dict(line, NewState1, LineNo),
+    format(string(ErrorMessage), "Unrecognized ~w on line: ~w", [Unknown, LineNo]),
+    append(Err, [ErrorMessage], NewErr),
+    put_dict(err, NewState1, NewErr, NewState2)
+  },
+  invisible(NewState2, NewState3),
+  lexemes(NewState3, Result).
+
 lexemes(Result, Result) --> [].
 
 scan(I, O) :-
