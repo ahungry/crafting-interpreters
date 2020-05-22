@@ -6,6 +6,22 @@
 
 :- set_prolog_flag(double_quotes, chars).
 
+make_error(ErrorMessage, Unknown, LineNo) :-
+  integer(Unknown),
+  format(string(ErrorMessage), "Unrecognized ~c on line: ~w", [Unknown, LineNo]).
+
+make_error(ErrorMessage, Unknown, LineNo) :-
+  format(string(ErrorMessage), "Unrecognized ~w on line: ~w", [Unknown, LineNo]).
+
+% Append a new item to a dict key
+append_dict(Key, D1, D2, Val) :-
+  get_dict(Key, D1, Acc),
+  append(Acc, [Val], NewAcc),
+  put_dict(Key, D1, NewAcc, D2).
+
+append_acc(D1, D2, Val) :- append_dict(acc, D1, D2, Val).
+append_err(D1, D2, Val) :- append_dict(err, D1, D2, Val).
+
 ws --> [W], { char_type(W, white) }.
 
 nl(State, NewState) --> [W], {
@@ -63,11 +79,17 @@ token(O) --> ">=", { O = greater_equal }.
 token(O) --> "<=", { O = less_equal }.
 token(O) --> [I], { token(I, O) }.
 
+% When parsing the grammer from file, char code isn't translated always...
+token(O) --> [I], { integer(I), char_code(C, I), token(C, O) }.
+
 is_identifier(L) :- code_type(L, alnum) ; L = '-'.
 
 % Some literal matches
 double_quote --> ['"'].
+double_quote --> [I], { integer(I), char_code(C, I), C = '"' }.
+
 dot --> ['.'].
+dot --> [I], { char_code(C, I), C = '.' }.
 
 % Numeric stuff
 is_digit(L) :- code_type(L, digit).
@@ -126,11 +148,7 @@ lexemes(Result) --> lexemes(state{line: 1, acc: [], err: []}, Result).
 lexemes(State, Result) -->
   invisible(State, NewState1),
   lexeme(NewState1, NewState2, R1),
-  {
-    get_dict(acc, NewState2, Acc),
-    append(Acc, [R1], R2),
-    put_dict(acc, NewState2, R2, NewState3)
-  },
+  { append_acc(NewState2, NewState3, R1) },
   invisible(NewState3, NewState4),
   lexemes(NewState4, Result).
 
@@ -139,11 +157,9 @@ lexemes(State, Result) -->
   [Unknown],
   invisible(State, NewState1),
   {
-    get_dict(err, NewState1, Err),
     get_dict(line, NewState1, LineNo),
-    format(string(ErrorMessage), "Unrecognized ~w on line: ~w", [Unknown, LineNo]),
-    append(Err, [ErrorMessage], NewErr),
-    put_dict(err, NewState1, NewErr, NewState2)
+    make_error(ErrorMessage, Unknown, LineNo),
+    append_err(NewState1, NewState2, ErrorMessage)
   },
   invisible(NewState2, NewState3),
   lexemes(NewState3, Result).
