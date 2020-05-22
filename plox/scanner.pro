@@ -40,11 +40,20 @@ token('{', brace_left).
 token('}', brace_right).
 token('[', bracket_left).
 token(']', bracket_right).
+
+token(',', comma).
+token('.', dot).
+
+token('-', minus).
+token('+', plus).
+token(';', semicolon).
+token('*', star).
+token('/', slash).
+
 token('!', bang).
 token('=', equal).
 token('<', less).
 token('>', greater).
-% token(_, unknown).
 
 token(O) --> "!=", { O = bang_equal }.
 token(O) --> "==", { O = equal_equal }.
@@ -65,7 +74,7 @@ comment(O) --> "//", { O = comment }.
 any --> [W], { \+ char_type(W, newline) }, any.
 any --> [].
 
-comment_line(State, NewState, Result) --> comment(Result), any, nl(State, NewState).
+comment_line(State, NewState, Result) --> comment(Result), any, invisible(State, NewState).
 
 lexeme(State, NewState, Result) --> comment_line(State, NewState, Result).
 lexeme(State, State, Result) --> token(Result).
