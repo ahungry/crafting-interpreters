@@ -1,3 +1,5 @@
+% About 170 lines vs 250 in java
+
 :- module(scanner, [
             scan/2
           ]).
@@ -171,9 +173,3 @@ scan(I, O) :-
 
 scan_file(I, O) :-
   phrase_from_file(lexemes(O), I).
-
-sample("hello world").
-
-test(O) :-
-  sample(I),
-  scan(I, O).
