@@ -63,6 +63,32 @@ token(O) --> [I], { token(I, O) }.
 
 is_identifier(L) :- code_type(L, alnum) ; L = '-'.
 
+% Some literal matches
+double_quote --> ['"'].
+dot --> ['.'].
+
+% Numeric stuff
+is_digit(L) :- code_type(L, digit).
+
+digits([H|T]) --> [H], { is_digit(H) }, digits(T).
+digits([T]) --> [T], { is_digit(T) }.
+
+float(Result) --> digits(Digits1), dot, digits(Digits2),
+                  {
+                    append(Digits1, ['.'], X),
+                    append(X, Digits2, Y),
+                    string_chars(Value, Y),
+                    Result = number{ val: Value }
+                  }.
+integer(Result) --> digits(Digits),
+                    {
+                      string_chars(Value, Digits),
+                      Result = number{ val: Value }
+                    }.
+
+number(Result) --> integer(Result).
+number(Result) --> float(Result).
+
 % https://www.metalevel.at/prolog/dcg
 % use listing(identifier). to see what the DCG is actually making...
 % 1 or more
@@ -76,15 +102,20 @@ any --> [].
 
 comment_line(State, NewState, Result) --> comment(Result), any, invisible(State, NewState).
 
+% TODO: Capture the string values
+str_line(State, State, string) --> double_quote, any, double_quote.
+
 lexeme(State, NewState, Result) --> comment_line(State, NewState, Result).
+lexeme(State, NewState, Result) --> str_line(State, NewState, Result).
 lexeme(State, State, Result) --> token(Result).
 lexeme(State, State, Result) --> keyword(Result).
+lexeme(State, State, Result) --> number(Result).
 lexeme(State, State, Result) -->
-  \+ keyword(_),
+  %\+ keyword(_),
   identifier(Letters),
   {
-    string_chars(Word, Letters),
-    Result = id{ word: Word }
+    string_chars(Value, Letters),
+    Result = id{ val: Value }
   }.
 % phrase(lexeme(N), "{"). -> N = brace_left.
 
