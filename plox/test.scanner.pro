@@ -8,9 +8,10 @@ user:prolog_file_type(pro, prolog).
 
 :- use_module(scanner).
 
-test() :-
-  scanner:scan("var x = 5 + 10;", R),
+test(In) :-
+  string_chars(In, Cs),
+  scanner:scan(Cs, R),
   format("~w", [R]).
 
-main() :-
-  test.
+main(In) :-
+  test(In).
