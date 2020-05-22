@@ -78,9 +78,17 @@ lexeme(Result) -->
 % phrase(lexeme(N), "{"). -> N = brace_left.
 
 lexemes([]) --> [].
-lexemes(Result) --> lexemes([], Result).
-lexemes(Acc, Result) -->
-  invisible, lexeme(R1), { append(Acc, [R1], R2) }, invisible, lexemes(R2, Result).
+lexemes(Result) --> lexemes(state{line: 1, acc: []}, Result).
+lexemes(State, Result) -->
+  invisible,
+  lexeme(R1),
+  {
+    get_dict(acc, State, Acc),
+    append(Acc, [R1], R2),
+    put_dict(acc, State, R2, NewState)
+  },
+  invisible,
+  lexemes(NewState, Result).
 lexemes(Result, Result) --> [].
 
 scan(I, O) :-
