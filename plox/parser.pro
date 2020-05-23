@@ -1,6 +1,6 @@
-%% :- module(parser, [
-%%             parse/2
-%%           ]).
+:- module(parser, [
+            parse/2
+          ]).
 
 :- use_module(library(pio)).
 
@@ -19,19 +19,21 @@
 %%                | "(" expression ")" ;
 
 %% S = State
-number(R)        --> [number],        { R = number{val: 5} }.
-string(R)        --> [string],        { R = string{val: blub} }.
-bang(R)          --> [bang],          { R = bang }.
-minus(R)         --> [minus],         { R = minus }.
-star(R)          --> [star],          { R = star }.
-slash(R)         --> [slash],         { R = slash }.
-plus(R)          --> [plus],          { R = plus }.
-greater(R)       --> [greater],       { R = greater }.
-greater_equal(R) --> [greater_equal], { R = greater_equal }.
-less(R)          --> [less],          { R = less }.
-less_equal(R)    --> [less_equal],    { R = less_equal }.
-bang_equal(R)    --> [bang_equal],    { R = bang_equal }.
-equal_equal(R)   --> [equal_equal],   { R = equal_equal }.
+number(R)        --> [number{val: N}], { R = number{val: N} }.
+id(R)            --> [id{val: S}],     { R = id{val: S} }.
+string(R)        --> [string{val: S}], { R = string{val: S} }.
+string(R)        --> [string],         { R = string{val: "?"} }.
+bang(R)          --> [bang],           { R = bang }.
+minus(R)         --> [minus],          { R = minus }.
+star(R)          --> [star],           { R = star }.
+slash(R)         --> [slash],          { R = slash }.
+plus(R)          --> [plus],           { R = plus }.
+greater(R)       --> [greater],        { R = greater }.
+greater_equal(R) --> [greater_equal],  { R = greater_equal }.
+less(R)          --> [less],           { R = less }.
+less_equal(R)    --> [less_equal],     { R = less_equal }.
+bang_equal(R)    --> [bang_equal],     { R = bang_equal }.
+equal_equal(R)   --> [equal_equal],    { R = equal_equal }.
 
 primary(R) --> number(R) ; string(R).
 
@@ -71,3 +73,23 @@ expression(R) --> equality(R).
 
 %expression(S) --> equality(S).
 %equality(S) --> comparison
+
+pp(binary{op: Op, left: Left, right: Right}) :-
+  format(" ("),
+  format("~w", [Op]),
+  pp(Left), pp(Right),
+  format(")").
+pp(unary{op: Op, right: Right}) :-
+  format(" ("),
+  format("~w", [Op]),
+  pp(Right),
+  format(")").
+pp(number{val: Val}) :- format(" ~w", [Val]).
+pp(string{val: Val}) :- string_chars(S, Val), format(" \"~w\"", [S]).
+
+parse(In, Out) :- phrase(expression(Out), In).
+
+test_pp() :-
+  phrase(expression(R), [minus, number{val: 8}, plus, string{val: "yaya"}]),
+  format("~w~n", R),
+  pp(R).

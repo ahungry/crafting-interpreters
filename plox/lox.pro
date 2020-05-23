@@ -7,10 +7,16 @@ user:prolog_file_type(pro, prolog).
 % TODO Add scanner to create tokens
 
 :- use_module(scanner).
+:- use_module(parser).
 
 run(In) :-
-  scanner:scan(In, Out),
-  format("~w~n", [Out]).
+  scanner:scan(In, state{acc: Acc, err:[], line: _}),
+  parser:parse(Acc, Parsed),
+  parser:pp(Parsed), format("~n").
+
+run(In) :-
+  scanner:scan(In, state{acc: _, err:Err, line: _}),
+  format("Couldn't parse something: ~w~n", [Err]).
 
 run_prompt() :-
   read_line_to_string(user_input, Line),
